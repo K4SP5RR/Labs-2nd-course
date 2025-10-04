@@ -148,10 +148,10 @@ String String::operator()(int i, int j) {
 
 
 int main() {
-	//String s1("Hellopidorword"), s2 = "word";
-	//int i = s2.BMSearch(s1);
-	//s1 = s1(0, i - 1) + s1(i + s2.strLenght(), s1.strLenght() - 1);
-	//cout << s1[0];
+	String s1("Helloword"), s2 = "word";
+	int i = s2.BMSearch(s1);
+	s1 = s1(0, i - 1) + s1(i + s2.strLenght(), s1.strLenght() - 1);
+	cout << s1[0] << endl;
 	String s1 = "ABABCBABABCB", s2 = "ABCB";
 	cout << s2.BMSearch(s1);
 }
