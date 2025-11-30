@@ -20,26 +20,46 @@ class Huffman:
         tree = self._build_tree(freq_tabl)
         self._generate_codes(tree, "")
 
-        encode_bits = self._bits_to_bytes(''.join(self._codes[char] for char in text))
-        ser_tree = self._bits_to_bytes(self._serialize_tree(tree))
+        encode_bits = ''.join(self._codes[char] for char in text)
+        ser_tree = self._serialize_tree(tree)
 
+        data = self._bits_to_bytes(ser_tree+encode_bits)
         filename_output = os.path.splitext(filename_input)[0] + ".huff"
+
         with open(filename_output, 'wb') as output_file:
-            output_file.write(ser_tree)
-            output_file.write(encode_bits)
+            output_file.write(data)
         return filename_output
             
         
-    def decompress(self, input_file):
-        with open(input_file, 'rb') as input_file:
-            ser_tree = bytearray()
-            
+    def decompress(self, filename_input):
+        with open(filename_input, 'rb') as input_file:
+            bytes = input_file.read()
+        bits = self._bytes_to_bits(bytes)
+        root, text = self._deserialize_tree(bits)
+        result = ''
+        tree = root
+        for i in range(len(text)):
+            if text[i] == '0':
+                tree = tree.left
+            else:
+                tree = tree.right
+            if tree.char is not None:
+                result += tree.char
+                tree = root
+        filename_output = os.path.splitext(filename_input)[0] + "_decompressed.txt"
+        with open(filename_output, 'w', encoding='utf-8') as output_file:
+            output_file.write(result)
+        return filename_output
 
     def _bits_to_bytes(self, bits):
         bytes = bytearray()
-        pad = 8 - (len(bits))%8
-        if pad != 8: bits += '0' * pad
+        pad = 8 - (len(bits)%8)
+        if pad == 8:
+            pad = 0
+        
+        bits += '0'*pad
         bytes.append(pad)
+
         for bit in range(0, len(bits), 8):
             b = bits[bit:bit+8]
             bytes.append(int(b,2))
@@ -50,7 +70,7 @@ class Huffman:
         pad = bytes[0]
         for byte in bytes[1:]:
             bits += format(byte, '08b')
-        if pad != 8: bits = bits[:-pad]
+        if pad > 0: bits = bits[:-pad]
         return bits
     
     def _deserialize_tree(self, ser_tree):
@@ -121,12 +141,38 @@ def main():
                                    epilog='Пример: python huffman.py -c file.txt')
     pars.add_argument('-c', '--compress', help='Сжать файл')
     pars.add_argument('-d', '--decompress', help='Распаковать файл')
+    pars.add_argument('-v', '--verify', help='Проверить целостность файлов после сжатия и распаковки')
 
     args = pars.parse_args()
     if args.compress:
         print(f"Сжатие файла {args.compress}")
+        ans = Huffman()
+        try:
+            ans.compress(args.compress)
+        except FileNotFoundError:
+            print("Файл не найден")
+        print("Файл успешно сжат")
     elif args.decompress:
         print(f"Распаковка файла {args.decompress}")
+        ans = Huffman()
+        try:
+            ans.decompress(args.decompress)
+        except FileNotFoundError:
+            print("Файл не найден")
+        print("Файл успешно распакован")
+    elif args.verify:
+        print(f"Проверка целостности файла {args.verify}")
+        ans = Huffman()
+        try:
+            compressed_file = ans.compress(args.verify)
+            decompressed_file = ans.decompress(compressed_file)
+            with open(args.verify, 'r', encoding='utf-8') as original, open(decompressed_file, 'r', encoding='utf-8') as decompressed:
+                if original.read() == decompressed.read():
+                    print("Файлы идентичны")
+                else:
+                    print("Файлы не идентичны")
+        except FileNotFoundError:
+            print("Файл не найден")
     else:
         pars.print_help()
 
