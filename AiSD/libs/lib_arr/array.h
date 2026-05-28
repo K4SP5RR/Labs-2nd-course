@@ -2,17 +2,20 @@
 #include <iostream>
 
 class Array {
-    int* arr;
-    int length;
     static bool init;
     static void Initialized();
     void recursive_Hoar_sort(int l, int r);
-    static inline void Swap(int& x, int& y);
     void Sift_Down_recursive(int, int);
     void Sift_Down(int, int);
-
-
-   public:
+protected:
+    int* arr;
+    int length;
+    static inline void Swap(int& x, int& y){
+        int c = x;
+        x = y;
+        y = c;
+    }
+public:
     Array(int len = 1, int mode = 1, int range = 10);
     Array(int*, int len);
     Array(const Array&);

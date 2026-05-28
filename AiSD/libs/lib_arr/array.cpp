@@ -137,13 +137,6 @@ bool Array::isSorted() {
     return true;
 }
 
-
-void Array::Swap(int& x, int& y) {
-    int c = x;
-    x = y;
-    y = c;
-}
-
 void Array::Sift_Down_recursive(int i, int n){
     int m = i, left = 2*i+1, right = left+1;
     
